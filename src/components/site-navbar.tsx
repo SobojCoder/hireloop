@@ -40,6 +40,7 @@ function DesktopLinks() {
         Sign In
       </Link>
       <Button
+      nativeButton={false}
         render={<Link href="/sign-up" />}
         className="h-9 rounded-lg bg-indigo-500 px-4 text-white shadow-[0_0_16px_rgba(99,102,241,0.35)] hover:bg-indigo-400"
       >
