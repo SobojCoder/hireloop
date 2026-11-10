@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { creatJob } from "@/lib/actions/jobs";
 
 // Collected form shape — easy to map when saving to MongoDB later.
 export type JobFormData = {
@@ -82,17 +83,20 @@ export function PostJobForm() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
+    const jobData: JobFormData = {...form}
     if (!form.title || !form.companyName || !form.category) {
       setError("Please fill in all required fields.");
       return;
     }
+    
+    const result = await creatJob(jobData);
 
     // TODO: POST this payload to your jobs API route / Mongo collection later.
-    console.log("New job form data:", form);
+    console.log("New job form data:", result);
   }
 
   return (
