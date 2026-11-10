@@ -16,11 +16,12 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { getJobs } from "@/lib/api/jobs";
+import { DeleteJobDialog } from "@/app/components/DeleteJobDialog";
 
 // Reuses the same shape the "Post a New Job" page collects, plus the
 // viewing-only fields a list needs (status, applicants, timestamps).
-type JobRow = {
-  id: string;
+export type JobRow = {
+  _id: string;
   title: string;
   category: string;
   companyName: string;
@@ -103,13 +104,14 @@ export default async function ManageJobsPage() {
             across your organization.
           </p>
         </div>
+        <Link href="/dashboard/recruiter/jobs/new">
         <Button
-          render={<Link href="/dashboard/recruiter/jobs/new" />}
           className="h-10 rounded-lg bg-indigo-500 px-5 text-white hover:bg-indigo-400"
         >
           <Plus />
           New Job Post
         </Button>
+        </Link>
       </div>
 
       {/* Table card — scrolls horizontally on small screens */}
@@ -133,7 +135,7 @@ export default async function ManageJobsPage() {
               const JobIcon = job.icon;
               return (
                 <tr
-                  key={job.id}
+                  key={job._id}
                   className="border-b border-white/5 transition-colors last:border-b-0 hover:bg-white/[0.02]"
                 >
                   {/* Job title & dept */}
@@ -223,6 +225,7 @@ export default async function ManageJobsPage() {
                       >
                         <Copy className="size-3.5" />
                       </Button>
+                      <DeleteJobDialog job={job}/>
                       <Button
                         variant="ghost"
                         aria-label={`More options for ${job.title}`}
