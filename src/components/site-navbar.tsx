@@ -9,15 +9,22 @@ import { Button } from "@/components/ui/button";
 import { SiteLogo } from "@/components/site-logo";
 import { authClient } from "@/lib/auth-client";
 
-const navLinks = [
-  { label: "Browse Jobs", href: "#" },
-  { label: "Company", href: "#" },
-  { label: "Pricing", href: "#" },
-];
+
 
 function DesktopLinks() {
   const {data: session} = authClient.useSession()
   console.log('user session', session);
+
+  const handleSignOut = ()=>{
+    authClient.signOut();
+  }
+
+  const navLinks = [
+  { label: "Browse Jobs", href: "#" },
+  { label: "Company", href: "#" },
+  { label: "Pricing", href: "#" },
+  { label: "Dashboard", href: `/dashboard/${session?.user?.role}` },
+];
   return (
     <div className="hidden items-center gap-7 md:flex">
       {navLinks.map((link) => (
@@ -31,7 +38,17 @@ function DesktopLinks() {
       ))}
       <span className="h-5 w-px bg-white/15" aria-hidden="true" />
       {
-        session?.user ? <span>hello</span>: 
+        session?.user ? <>
+        <span>hello</span>
+        <Button
+      nativeButton={false}
+      onClick={handleSignOut}
+        className="h-9 rounded-lg bg-red-500 px-4 text-white shadow-[0_0_16px_rgba(99,102,241,0.35)] hover:bg-indigo-400"
+      >
+        Sign Out
+      </Button>
+        </>
+        : 
         <>
         <Link
         href="/sign-in"
@@ -59,6 +76,18 @@ function MobileMenu({
   open: boolean;
   onNavigate: () => void;
 }) {
+  const {data: session} = authClient.useSession()
+  console.log('user session', session);
+
+  const handleSignOut = ()=>{
+    authClient.signOut();
+  }
+  const navLinks = [
+  { label: "Browse Jobs", href: "#" },
+  { label: "Company", href: "#" },
+  { label: "Pricing", href: "#" },
+  { label: "Dashboard", href: `/dashboard/${session?.user?.role}` },
+];
   if (!open) return null;
 
   return (
@@ -74,19 +103,34 @@ function MobileMenu({
         </Link>
       ))}
       <div className="mt-2 flex flex-col gap-2 border-t border-white/10 pt-3">
+        {
+        session?.user ? <>
+        <span>hello</span>
         <Button
-          render={<Link href="/sign-in" onClick={onNavigate} />}
-          variant="outline"
-          className="h-10 rounded-lg border-white/10 bg-transparent text-indigo-400 hover:bg-white/5 hover:text-indigo-300"
-        >
-          Sign In
-        </Button>
-        <Button
-          render={<Link href="/sign-up" onClick={onNavigate} />}
-          className="h-10 rounded-lg bg-indigo-500 text-white shadow-[0_0_16px_rgba(99,102,241,0.35)] hover:bg-indigo-400"
-        >
-          Get Started
-        </Button>
+      nativeButton={false}
+      onClick={handleSignOut}
+        className="h-9 rounded-lg bg-red-500 px-4 text-white shadow-[0_0_16px_rgba(99,102,241,0.35)] hover:bg-indigo-400"
+      >
+        Sign Out
+      </Button>
+        </>
+        : 
+        <>
+        <Link
+        href="/sign-in"
+        className="rounded-md text-sm font-medium text-indigo-400 transition-colors outline-none hover:text-indigo-300 focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        Sign In
+      </Link>
+      <Button
+      nativeButton={false}
+        render={<Link href="/sign-up" />}
+        className="h-9 rounded-lg bg-indigo-500 px-4 text-white shadow-[0_0_16px_rgba(99,102,241,0.35)] hover:bg-indigo-400"
+      >
+        Get Started
+      </Button>
+        </>
+      }
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import {
   CircleUser,
   Settings,
   Users,
+  PlusCircle,
 } from "lucide-react";
 
 import {
@@ -50,6 +51,7 @@ export const menuItemsByRole: Record<DashboardRole, MenuItem[]> = {
   ],
   recruiter: [
     { name: "Dashboard", url: "/dashboard/recruiter", icon: LayoutDashboard },
+    { name: "Add Job", url: "/dashboard/recruiter/jobs/new", icon: PlusCircle },
     { name: "Manage Jobs", url: "/dashboard/recruiter/jobs", icon: BriefcaseBusiness },
     { name: "Applications", url: "/dashboard/recruiter/applications", icon: FileText },
     { name: "Settings", url: "/dashboard/recruiter/settings", icon: Settings },
@@ -65,7 +67,7 @@ export const menuItemsByRole: Record<DashboardRole, MenuItem[]> = {
 
 export function DashboardSidebar() {
   const { data: session, isPending } = authClient.useSession();
-  const role = (session?.user?.role || "seeker") as DashboardRole;
+  const role = (session?.user?.role || "admin") as DashboardRole;
   const pathname = usePathname();
   const menuItems = menuItemsByRole[role];
   return (
@@ -83,7 +85,6 @@ export function DashboardSidebar() {
                   return (
                     <SidebarMenuItem key={item.name}>
                       <SidebarMenuButton
-                        isActive={isActive}
                         tooltip={item.name}
                         render={<Link href={item.url} />}
                       >
