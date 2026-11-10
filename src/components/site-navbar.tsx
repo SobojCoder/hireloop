@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { SiteLogo } from "@/components/site-logo";
+import { authClient } from "@/lib/auth-client";
 
 const navLinks = [
   { label: "Browse Jobs", href: "#" },
@@ -15,6 +16,8 @@ const navLinks = [
 ];
 
 function DesktopLinks() {
+  const {data: session} = authClient.useSession()
+  console.log('user session', session);
   return (
     <div className="hidden items-center gap-7 md:flex">
       {navLinks.map((link) => (
@@ -27,7 +30,10 @@ function DesktopLinks() {
         </Link>
       ))}
       <span className="h-5 w-px bg-white/15" aria-hidden="true" />
-      <Link
+      {
+        session?.user ? <span>hello</span>: 
+        <>
+        <Link
         href="/sign-in"
         className="rounded-md text-sm font-medium text-indigo-400 transition-colors outline-none hover:text-indigo-300 focus-visible:ring-3 focus-visible:ring-ring/50"
       >
@@ -39,6 +45,8 @@ function DesktopLinks() {
       >
         Get Started
       </Button>
+        </>
+      }
     </div>
   );
 }

@@ -1,36 +1,85 @@
 "use client";
 
+import { useState } from "react";
 import type { FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { Building2, ShieldCheck, User } from "lucide-react";
+
+import { cn } from "cn";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { GitHubLogo } from "@/components/ui/github-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth-client";
+import { PasswordInput } from "@/components/ui/password-input";
 
 // Collected form shape — reuse this when wiring up Better Auth later.
+export type SignUpRole = "seeker" | "recruiter" | "admin";
+
 export type SignUpData = {
   name: string;
   email: string;
+  role: SignUpRole;
   password: string;
   confirmPassword: string;
 };
 
+const roles = [
+  {
+    value: "seeker",
+    label: "Job Seeker",
+    description: "Find & apply to jobs",
+    icon: User,
+  },
+  {
+    value: "recruiter",
+    label: "Recruiter",
+    description: "Post jobs & hire",
+    icon: Building2,
+  },
+  {
+    value: "admin",
+    label: "Admin",
+    description: "Manage the platform",
+    icon: ShieldCheck,
+  },
+] as const;
+
 export function SignUpForm() {
+  const router = useRouter();
+  const [role, setRole] = useState<SignUpRole>("seeker");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError(null);
+
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData) as unknown as SignUpData;
 
-    const { data: signUpResponse, error } = await authClient.signUp.email({
-    name: data.name, 
-    email: data.email, 
-    password: data.password, 
-    callbackURL: "/", 
-});
-console.log('sign up response', signUpResponse, error);
+    if (data.password !== data.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
 
-    // TODO: integrate authClient.signUp.email(data) here.
-    console.log("Sign up form data:", data);
+    setIsSubmitting(true);
+    const { error } = await authClient.signUp.email({
+      name: data.name,
+      email: data.email,
+      password: data.password,
+      role: data.role,
+    });
+    setIsSubmitting(false);
+
+    if (error) {
+      setError(error.message || "Something went wrong. Please try again.");
+      return;
+    }
+
+    // Successfully signed up (Better Auth signs the user in automatically).
+    // TODO: redirect based on role (recruiter/admin → dashboard) once those routes exist.
+    router.push("/");
   }
 
   return (
@@ -43,6 +92,51 @@ console.log('sign up response', signUpResponse, error);
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <Label>Account type</Label>
+          <div
+            role="radiogroup"
+            aria-label="Account type"
+            className="grid gap-2 sm:grid-cols-3"
+          >
+            {roles.map(
+              ({ value, label, description, icon: RoleIcon }) =>
+                (
+                  <label
+                    key={value}
+                    data-role={value}
+                    className={cn(
+                      "group/role flex cursor-pointer flex-col items-center gap-1 rounded-lg border px-3 py-2.5 text-center transition-colors outline-none select-none",
+                      "has-focus-visible:border-indigo-500/60 has-focus-visible:ring-3 has-focus-visible:ring-indigo-500/25",
+                      role === value
+                        ? "border-indigo-500/60 bg-indigo-500/10 text-white"
+                        : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="role"
+                      value={value}
+                      checked={role === value}
+                      onChange={() => setRole(value)}
+                      className="sr-only"
+                    />
+                    <RoleIcon
+                      className={
+                        role === value ? "size-4 text-indigo-400" : "size-4 text-zinc-500"
+                      }
+                    />
+                    <span className="text-xs font-medium whitespace-nowrap">
+                      {label}
+                    </span>
+                    <span className="text-[11px] text-zinc-500">
+                      {description}
+                    </span>
+                  </label>
+                )
+            )}
+          </div>
+        </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="name">Full name</Label>
           <Input
@@ -67,12 +161,13 @@ console.log('sign up response', signUpResponse, error);
           />
         </div>
 
+        
+
         <div className="flex flex-col gap-2">
           <Label htmlFor="password">Password</Label>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             placeholder="At least 8 characters"
             autoComplete="new-password"
             minLength={8}
@@ -82,21 +177,27 @@ console.log('sign up response', signUpResponse, error);
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="confirmPassword">Confirm password</Label>
-          <Input
+          <PasswordInput
             id="confirmPassword"
             name="confirmPassword"
-            type="password"
             placeholder="Re-enter your password"
             autoComplete="new-password"
             required
           />
         </div>
 
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
         <Button
           type="submit"
+          disabled={isSubmitting}
           className="h-10 w-full rounded-lg bg-indigo-500 text-white hover:bg-indigo-400"
         >
-          Create Account
+          {isSubmitting ? "Creating account..." : "Create Account"}
         </Button>
 
         <div className="flex items-center gap-3" role="separator">
