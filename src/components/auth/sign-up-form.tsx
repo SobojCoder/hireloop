@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { GitHubLogo } from "@/components/ui/github-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
 
 // Collected form shape — reuse this when wiring up Better Auth later.
 export type SignUpData = {
@@ -15,10 +16,18 @@ export type SignUpData = {
 };
 
 export function SignUpForm() {
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData) as unknown as SignUpData;
+
+    const { data: signUpResponse, error } = await authClient.signUp.email({
+    name: data.name, 
+    email: data.email, 
+    password: data.password, 
+    callbackURL: "/", 
+});
+console.log('sign up response', signUpResponse, error);
 
     // TODO: integrate authClient.signUp.email(data) here.
     console.log("Sign up form data:", data);
