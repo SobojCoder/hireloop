@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
 import {
   ChartColumn,
   FileText,
@@ -26,18 +25,9 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
-
-// Matches the `role` additional field defined in src/lib/auth.ts.
-export type DashboardRole = "seeker" | "recruiter" | "admin";
-
-export type MenuItem = {
-  /** Display name of the menu entry. */
-  name: string;
-  /** Destination path of the menu entry. */
-  url: string;
-  /** Lucide icon shown before the name. */
-  icon: LucideIcon;
-};
+// STEP 13: DashboardRole / MenuItem moved to the shared "@/types" barrel, so
+// other modules can use them without importing from this client component.
+import type { DashboardRole, MenuItem } from "@/types";
 
 // Menu structure follows the UI design:
 // Dashboard | Manage Jobs | Applications | Settings (recruiter example).

@@ -1,5 +1,15 @@
-'use client'
-import { Trash2Icon } from "lucide-react"
+"use client";
+
+// STEP 12: DeleteJobDialog cleanup — same behavior, tidier wiring:
+//   • `JobRow` is now imported (type-only) from "@/types" instead of reaching
+//     into the jobs page file.
+//   • Typo fixed: "Delete JOb?" → "Delete Job?".
+//   • Stray console.log removed; imports grouped consistently.
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Trash2Icon } from "lucide-react";
 
 import {
   AlertDialog,
@@ -12,30 +22,28 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { JobRow } from "../dashboard/recruiter/jobs/page"
-import { deleteJob } from "@/lib/actions/jobs"
-import { useState } from "react"
-import { toast } from "@/components/ui/toast"
-    import { useRouter } from "next/navigation"
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
+import { deleteJob } from "@/lib/actions/jobs";
+import type { JobRow } from "@/types";
 
-export function DeleteJobDialog({job}:{job:JobRow}) {
-    const [open, setOpen] = useState(false)
-    const router = useRouter()
-    const handleDeleteJob = async()=>{
-        const res = await deleteJob(job._id)
-        console.log('after delete', job._id, res);
-        if(res.deletedCount){
-            setOpen(false)
-            toast.add({
-  title: "Job deleted",
-  description: "The job has been permanently deleted.",
-})
-router.refresh();
-        }
+export function DeleteJobDialog({ job }: { job: JobRow }) {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  const handleDeleteJob = async () => {
+    const res = await deleteJob(job._id);
+    if (res.deletedCount) {
+      setOpen(false);
+      toast.add({
+        title: "Job deleted",
+        description: "The job has been permanently deleted.",
+      });
+      router.refresh();
     }
+  };
+
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger
@@ -46,7 +54,7 @@ router.refresh();
           <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
             <Trash2Icon />
           </AlertDialogMedia>
-          <AlertDialogTitle>Delete JOb?</AlertDialogTitle>
+          <AlertDialogTitle>Delete Job?</AlertDialogTitle>
           <AlertDialogDescription>
             This will permanently delete this job conversation. View{" "}
             <Link href="#">Settings</Link> delete any memories saved during this job.
@@ -58,5 +66,5 @@ router.refresh();
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

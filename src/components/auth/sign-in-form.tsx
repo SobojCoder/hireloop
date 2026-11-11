@@ -75,7 +75,10 @@ console.log('sign in response', signInResponse, error);
 
         <Button
           type="submit"
-          className="h-10 w-full rounded-lg bg-indigo-500 text-white hover:bg-indigo-400"
+          // Shared indigo styling via the `brand` variant (was a long
+          // repeated className string).
+          variant="brand"
+          className="h-10 w-full"
         >
           Sign In
         </Button>

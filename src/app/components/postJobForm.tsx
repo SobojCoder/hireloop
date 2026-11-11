@@ -1,8 +1,19 @@
 "use client";
 
+// ─── STEP 9: PostJobForm refactored onto the shared building blocks ───
+// What changed (visuals and behavior are identical):
+//   • Types now come from "@/types" instead of being defined here, so server
+//     code (lib/actions) no longer imports from a client component.
+//   • Option lists (jobTypes, jobCategories, frequencies) come from
+//     "@/lib/constants/jobs".
+//   • The three repeated section cards, eight field wrappers, five
+//     icon-inputs, the page header, and the error line now use
+//     <FormSection />, <FormField />, <InputWithIcon />, <PageHeader /> and
+//     <FormError /> from "@/components/shared".
+//   • The indigo submit button uses Button's new `brand` variant.
+
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
-import Link from "next/link";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -11,68 +22,24 @@ import {
   Globe,
   MapPin,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { cn } from "cn";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { creatJob } from "@/lib/actions/jobs";
-
-import {
-  Code,
-  Palette,
-  Megaphone,
-  Briefcase,
-  Database,
-  PenTool,
-} from "lucide-react";
-
-import { LucideIcon } from "lucide-react";
+import { createJob } from "@/lib/actions/jobs";
+import { jobCategories, frequencies, jobTypes } from "@/lib/constants/jobs";
+import type { JobFormData } from "@/types";
+import { FormSection } from "@/components/shared/form-section";
+import { FormField } from "@/components/shared/form-field";
+import { InputWithIcon } from "@/components/shared/input-with-icon";
+import { PageHeader } from "@/components/shared/page-header";
+import { FormError } from "@/components/shared/form-error";
 import { toast } from "@/components/ui/toast";
-import { useRouter } from "next/navigation";
-
-
-// Collected form shape — easy to map when saving to MongoDB later.
-export type JobFormData = {
-  title: string;
-  companyName: string;
-  category: string;
-  jobType: "Full-time" | "Part-time" | "Contract" | "Internship";
-  remote: boolean;
-  status: "Active" | "Expired";
-  location: string;
-  deadline: string;
-  minSalary: string;
-  maxSalary: string;
-  frequency: string;
-  responsibilities: string;
-  qualifications: string;
-  applicants: number
-};
-
-const jobTypes: JobFormData["jobType"][] = [
-  "Full-time",
-  "Part-time",
-  "Contract",
-  "Internship",
-];
-
-const jobCategories = [
-  "Engineering & Tech",
-  "Design & Creative",
-  "Product & Management",
-  "Data & AI",
-  "Marketing & Sales",
-  "Other",
-];
-
-const frequencies = ["per hour", "per day", "per week", "per month", "per year"];
-
-
 
 const initialJobForm: JobFormData = {
   title: "",
@@ -88,19 +55,15 @@ const initialJobForm: JobFormData = {
   frequency: "per hour",
   responsibilities: "",
   qualifications: "",
-  applicants: 0
-  
+  applicants: 0,
 };
-
-function RequiredMark() {
-  return <span className="text-indigo-400">*</span>;
-}
 
 export function PostJobForm() {
   const router = useRouter();
   const [form, setForm] = useState<JobFormData>(initialJobForm);
   const [error, setError] = useState<string | null>(null);
 
+  // Generic setter so each field can update one key without spreading logic.
   function update<K extends keyof JobFormData>(key: K, value: JobFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
@@ -109,72 +72,42 @@ export function PostJobForm() {
     event.preventDefault();
     setError(null);
 
-    const jobData: JobFormData = {...form}
+    // Same minimal validation as before — HTML `required` handles the rest.
     if (!form.title || !form.companyName || !form.category) {
       setError("Please fill in all required fields.");
       return;
     }
-    
-    const result = await creatJob(jobData);
 
-    console.log("create job result", result);
+    const result = await createJob(form);
 
-    if(result.insertedId){
+    if (result.insertedId) {
+      // (typo fixed: was "JOb created")
       toast.add({
-        title: "JOb created",
-        description: "The job has been successfully created"
-      })
-      router.push('/dashboard/recruiter/jobs')
+        title: "Job created",
+        description: "The job has been successfully created",
+      });
+      router.push("/dashboard/recruiter/jobs");
     }
-
   }
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8">
-      {/* Breadcrumb */}
-      <p className="text-xs text-zinc-500">
-        <Link
-          href="/dashboard/recruiter/jobs"
-          className="transition-colors outline-none hover:text-white focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          Manage Jobs
-        </Link>
-        <span aria-hidden="true"> › </span>
-        <span className="text-indigo-400">Create New Listing</span>
-      </p>
+      {/* Breadcrumb + page header (was inline markup, now shared component) */}
+      <PageHeader
+        crumbs={[
+          { label: "Manage Jobs", href: "/dashboard/recruiter/jobs" },
+          { label: "Create New Listing", className: "text-indigo-400" },
+        ]}
+        title="Post a New Job"
+        description="Fill in the position specifications to attract qualified talent across our network."
+      />
 
-      {/* Header */}
-      <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">
-              Post a New Job
-            </h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Fill in the position specifications to attract qualified talent
-              across our network.
-            </p>
-          </div>
-          
-        </div>
-
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
+      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-6">
+        {error && <FormError>{error}</FormError>}
 
         {/* 1. Basic Information */}
-        <section className="flex flex-col gap-5 rounded-xl border border-white/5 bg-[#141417] p-6">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-indigo-500" />
-            1. Basic Information
-          </h2>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="job-title">
-              Job Title <RequiredMark />
-            </Label>
+        <FormSection title="1. Basic Information">
+          <FormField label="Job Title" htmlFor="job-title" required>
             <Input
               id="job-title"
               name="title"
@@ -185,34 +118,22 @@ export function PostJobForm() {
               }
               required
             />
-          </div>
+          </FormField>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="company-name">
-                Company Name <RequiredMark />
-              </Label>
-              <div className="relative flex items-center">
-                <BriefcaseBusiness
-                  className="pointer-events-none absolute left-3 size-4 text-zinc-500"
-                  aria-hidden="true"
-                />
-                <Input
-                  id="company-name"
-                  name="companyName"
-                  className="pl-9"
-                  placeholder="HirePulse Network"
-                  value={form.companyName}
-                  onChange={(e) => update("companyName", e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+            <FormField label="Company Name" htmlFor="company-name" required>
+              <InputWithIcon
+                icon={BriefcaseBusiness}
+                id="company-name"
+                name="companyName"
+                placeholder="HirePulse Network"
+                value={form.companyName}
+                onChange={(e) => update("companyName", e.target.value)}
+                required
+              />
+            </FormField>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="job-category">
-                Job Category <RequiredMark />
-              </Label>
+            <FormField label="Job Category" htmlFor="job-category" required>
               <NativeSelect
                 id="job-category"
                 name="category"
@@ -231,13 +152,10 @@ export function PostJobForm() {
                   </option>
                 ))}
               </NativeSelect>
-            </div>
+            </FormField>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label>
-              Job Type <RequiredMark />
-            </Label>
+          <FormField label="Job Type" required>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {jobTypes.map((type) => (
                 <button
@@ -255,16 +173,11 @@ export function PostJobForm() {
                 </button>
               ))}
             </div>
-          </div>
-        </section>
+          </FormField>
+        </FormSection>
 
         {/* 2. Location, Compensation & Timeline */}
-        <section className="flex flex-col gap-5 rounded-xl border border-white/5 bg-[#141417] p-6">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-indigo-500" />
-            2. Location, Compensation &amp; Timeline
-          </h2>
-
+        <FormSection title="2. Location, Compensation & Timeline">
           <div className="flex items-center justify-between gap-4 rounded-lg border border-white/5 bg-white/[0.03] p-4">
             <div className="flex items-center gap-3">
               <Globe className="size-4 shrink-0 text-zinc-400" aria-hidden="true" />
@@ -285,89 +198,62 @@ export function PostJobForm() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="job-location">Job Location (Location)</Label>
-                <span className="text-[10px] text-zinc-600">Required</span>
-              </div>
-              <div className="relative flex items-center">
-                <MapPin
-                  className="pointer-events-none absolute left-3 size-4 text-zinc-500"
-                  aria-hidden="true"
-                />
-                <Input
-                  id="job-location"
-                  name="location"
-                  className="pl-9"
-                  placeholder="New York, USA"
-                  value={form.location}
-                  onChange={(e) => update("location", e.target.value)}
-                />
-              </div>
-            </div>
+            <FormField
+              label="Job Location (Location)"
+              htmlFor="job-location"
+              hint="Required"
+            >
+              <InputWithIcon
+                icon={MapPin}
+                id="job-location"
+                name="location"
+                placeholder="New York, USA"
+                value={form.location}
+                onChange={(e) => update("location", e.target.value)}
+              />
+            </FormField>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="deadline">Application Deadline (deadline)</Label>
-              <div className="relative flex items-center">
-                <Calendar
-                  className="pointer-events-none absolute left-3 size-4 text-zinc-500"
-                  aria-hidden="true"
-                />
-                <Input
-                  id="deadline"
-                  name="deadline"
-                  type="date"
-                  className="pl-9 [color-scheme:dark]"
-                  value={form.deadline}
-                  onChange={(e) => update("deadline", e.target.value)}
-                />
-              </div>
-            </div>
+            <FormField label="Application Deadline (deadline)" htmlFor="deadline">
+              <InputWithIcon
+                icon={Calendar}
+                id="deadline"
+                name="deadline"
+                type="date"
+                className="[color-scheme:dark]"
+                value={form.deadline}
+                onChange={(e) => update("deadline", e.target.value)}
+              />
+            </FormField>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="min-salary">Min Salary / Rate</Label>
-              <div className="relative flex items-center">
-                <CircleDollarSign
-                  className="pointer-events-none absolute left-3 size-4 text-zinc-500"
-                  aria-hidden="true"
-                />
-                <Input
-                  id="min-salary"
-                  name="minSalary"
-                  type="number"
-                  min="0"
-                  className="pl-9"
-                  placeholder="€25"
-                  value={form.minSalary}
-                  onChange={(e) => update("minSalary", e.target.value)}
-                />
-              </div>
-            </div>
+            <FormField label="Min Salary / Rate" htmlFor="min-salary">
+              <InputWithIcon
+                icon={CircleDollarSign}
+                id="min-salary"
+                name="minSalary"
+                type="number"
+                min="0"
+                placeholder="€25"
+                value={form.minSalary}
+                onChange={(e) => update("minSalary", e.target.value)}
+              />
+            </FormField>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="max-salary">Max Salary / Rate</Label>
-              <div className="relative flex items-center">
-                <CircleDollarSign
-                  className="pointer-events-none absolute left-3 size-4 text-zinc-500"
-                  aria-hidden="true"
-                />
-                <Input
-                  id="max-salary"
-                  name="maxSalary"
-                  type="number"
-                  min="0"
-                  className="pl-9"
-                  placeholder="€40"
-                  value={form.maxSalary}
-                  onChange={(e) => update("maxSalary", e.target.value)}
-                />
-              </div>
-            </div>
+            <FormField label="Max Salary / Rate" htmlFor="max-salary">
+              <InputWithIcon
+                icon={CircleDollarSign}
+                id="max-salary"
+                name="maxSalary"
+                type="number"
+                min="0"
+                placeholder="€40"
+                value={form.maxSalary}
+                onChange={(e) => update("maxSalary", e.target.value)}
+              />
+            </FormField>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="frequency">Frequency</Label>
+            <FormField label="Frequency" htmlFor="frequency">
               <NativeSelect
                 id="frequency"
                 name="frequency"
@@ -382,21 +268,17 @@ export function PostJobForm() {
                   </option>
                 ))}
               </NativeSelect>
-            </div>
+            </FormField>
           </div>
-        </section>
+        </FormSection>
 
         {/* 3. Responsibilities & Requirements */}
-        <section className="flex flex-col gap-5 rounded-xl border border-white/5 bg-[#141417] p-6">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-indigo-500" />
-            3. Responsibilities &amp; Requirements
-          </h2>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="responsibilities">
-              Key Responsibilities <RequiredMark />
-            </Label>
+        <FormSection title="3. Responsibilities & Requirements">
+          <FormField
+            label="Key Responsibilities"
+            htmlFor="responsibilities"
+            required
+          >
             <Textarea
               id="responsibilities"
               name="responsibilities"
@@ -408,12 +290,13 @@ export function PostJobForm() {
               }
               required
             />
-          </div>
+          </FormField>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="qualifications">
-              Qualifications &amp; Requirements <RequiredMark />
-            </Label>
+          <FormField
+            label="Qualifications & Requirements"
+            htmlFor="qualifications"
+            required
+          >
             <Textarea
               id="qualifications"
               name="qualifications"
@@ -423,13 +306,12 @@ export function PostJobForm() {
               onChange={(e) => update("qualifications", e.target.value)}
               required
             />
-          </div>
-        </section>
+          </FormField>
+        </FormSection>
+
         <section className="flex justify-end mr-6">
-          <Button
-            type="submit"
-            className="h-10 rounded-lg bg-indigo-500 px-5 text-white hover:bg-indigo-400"
-          >
+          {/* Indigo CTA now uses the shared `brand` variant */}
+          <Button type="submit" variant="brand" className="h-10 px-5">
             Publish Job
             <ArrowRight />
           </Button>

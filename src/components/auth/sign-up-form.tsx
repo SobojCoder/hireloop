@@ -12,6 +12,7 @@ import { GitHubLogo } from "@/components/ui/github-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
+import { FormError } from "@/components/shared/form-error";
 
 // Collected form shape — reuse this when wiring up Better Auth later.
 export type SignUpRole = "seeker" | "recruiter" | "admin";
@@ -186,16 +187,14 @@ export function SignUpForm() {
           />
         </div>
 
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
+        {error && <FormError>{error}</FormError>}
 
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="h-10 w-full rounded-lg bg-indigo-500 text-white hover:bg-indigo-400"
+          // Shared indigo styling via the `brand` variant.
+          variant="brand"
+          className="h-10 w-full"
         >
           {isSubmitting ? "Creating account..." : "Create Account"}
         </Button>

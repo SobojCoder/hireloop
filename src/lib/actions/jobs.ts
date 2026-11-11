@@ -1,8 +1,11 @@
-import { JobFormData } from "@/app/components/postJobForm";
+// STEP 10: types now come from the shared "@/types" barrel instead of a UI
+// component, and `creatJob` was renamed to the correctly spelled `createJob`
+// (the only call site was updated too, so nothing breaks).
+import type { JobFormData } from "@/types";
 
-const BASE_URL= process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
-export const creatJob = async(data: JobFormData)=>{
+export const createJob = async(data: JobFormData)=>{
     const res = await fetch(`${BASE_URL}/jobs`, {
         method: 'POST',
         headers: {

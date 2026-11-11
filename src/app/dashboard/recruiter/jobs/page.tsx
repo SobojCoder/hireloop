@@ -1,48 +1,14 @@
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
-import {
-  Code2,
-  Copy,
-  EllipsisVertical,
-  Eye,
-  MapPin,
-  Megaphone,
-  PenTool,
-  Pencil,
-  Plus,
-  PlusCircle,
-  Server,
-  ShieldCheck,
-  User2,
-  Users,
-  View,
-} from "lucide-react";
+import { Eye, MapPin, Pencil, Plus, User2, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { getJobs } from "@/lib/api/jobs";
 import { DeleteJobDialog } from "@/app/components/DeleteJobDialog";
+import { PageHeader } from "@/components/shared/page-header";
+import type { JobRow } from "@/types";
 
-// Reuses the same shape the "Post a New Job" page collects, plus the
-// viewing-only fields a list needs (status, applicants, timestamps).
-export type JobRow = {
-  _id: string;
-  title: string;
-  category: string;
-  companyName: string;
-  location: string; // display string, e.g. "Remote (New York, USA)"
-  type: import("@/app/components/postJobForm").JobFormData["jobType"];
-  minSalary: string;
-  maxSalary: string;
-  frequency: string;
-  applicants: number;
-  status: "Active" | "Expired";
-  deadline: string;
-  postedAgo: string;
-  
-  icon: LucideIcon;
-  // Tailwind classes for the colored category icon tile + category label.
-  accent: { iconBg: string; iconText: string; categoryText: string };
-};
+// STEP 11: the JobRow type (and the UI-only icon/accent fields that leaked
+// into it) now live in "@/types". The page only consumes data here.
 
 // Dummy data matching the fields collected the new jobs page.
 
@@ -87,36 +53,25 @@ function StatusPill({ status }: { status: JobRow["status"] }) {
 
 export default async function ManageJobsPage() {
   const jobs: JobRow[] = await getJobs();
-  console.log('jobs data', jobs);
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8">
-      {/* Breadcrumb */}
-      <p className="text-xs text-zinc-500">
-        Manage Jobs
-        <span aria-hidden="true"> › </span>
-        <span className="text-zinc-300">Job Listings &amp; Postings</span>
-      </p>
-
-      {/* Header */}
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
-            Manage Job Posts
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Review live listings, monitor applicants, and update job details
-            across your organization.
-          </p>
-        </div>
-        <Link href="/dashboard/recruiter/jobs/new">
-        <Button
-          className="h-10 rounded-lg bg-indigo-500 px-5 text-white hover:bg-indigo-400"
-        >
-          <Plus />
-          New Job Post
-        </Button>
-        </Link>
-      </div>
+      {/* Breadcrumb + header — now the shared <PageHeader /> (same markup) */}
+      <PageHeader
+        crumbs={[
+          { label: "Manage Jobs" },
+          { label: "Job Listings & Postings", className: "text-zinc-300" },
+        ]}
+        title="Manage Job Posts"
+        description="Review live listings, monitor applicants, and update job details across your organization."
+        action={
+          <Link href="/dashboard/recruiter/jobs/new">
+            <Button variant="brand" className="h-10 px-5">
+              <Plus />
+              New Job Post
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Table card — scrolls horizontally on small screens */}
       <div className="mt-8 overflow-x-auto rounded-xl border border-white/5 bg-[#141417]">
@@ -136,7 +91,6 @@ export default async function ManageJobsPage() {
           </thead>
           <tbody>
             {jobs.map((job) => {
-              const JobIcon = job.icon;
               return (
                 <tr
                   key={job._id}
@@ -220,7 +174,8 @@ export default async function ManageJobsPage() {
                   {/* Actions */}
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
-                      <Button className="h-8 rounded-lg bg-indigo-500 px-3 text-xs text-white hover:bg-indigo-400">
+                      {/* Same indigo styling via the shared `brand` variant */}
+                      <Button variant="brand" className="h-8 px-3 text-xs">
                         <Pencil className="size-3.5" />
                       </Button>
                       <Button
