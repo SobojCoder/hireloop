@@ -4,14 +4,18 @@ import {
   Code2,
   Copy,
   EllipsisVertical,
+  Eye,
   MapPin,
   Megaphone,
   PenTool,
   Pencil,
   Plus,
+  PlusCircle,
   Server,
   ShieldCheck,
+  User2,
   Users,
+  View,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -141,12 +145,14 @@ export default async function ManageJobsPage() {
                   {/* Job title & dept */}
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
+                      <span className="bg-gray-200 rounded-2xl">{job.title[0]}</span>
                       {/* <span
                         aria-hidden="true"
                         className={`grid size-8 shrink-0 place-items-center rounded-lg ${job.accent.iconBg} ${job.accent.iconText}`}
                       >
                         <JobIcon className="size-4" />
                       </span> */}
+                      <User2 />
                       <div className="flex flex-col gap-0.5">
                         <span className="font-semibold text-white">
                           {job.title}
@@ -216,23 +222,16 @@ export default async function ManageJobsPage() {
                     <div className="flex items-center gap-2">
                       <Button className="h-8 rounded-lg bg-indigo-500 px-3 text-xs text-white hover:bg-indigo-400">
                         <Pencil className="size-3.5" />
-                        Update
                       </Button>
                       <Button
                         variant="outline"
                         aria-label={`Duplicate ${job.title}`}
                         className="h-8 rounded-lg border-white/10 bg-white/5 p-2 text-zinc-400 hover:bg-white/10 hover:text-white"
                       >
-                        <Copy className="size-3.5" />
+                        <Eye className="size-3.5" />
                       </Button>
                       <DeleteJobDialog job={job}/>
-                      <Button
-                        variant="ghost"
-                        aria-label={`More options for ${job.title}`}
-                        className="h-8 rounded-lg p-2 text-zinc-400 hover:bg-white/10 hover:text-white"
-                      >
-                        <EllipsisVertical className="size-3.5" />
-                      </Button>
+                     
                     </div>
                   </td>
                 </tr>

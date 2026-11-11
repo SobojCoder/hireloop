@@ -22,6 +22,20 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { creatJob } from "@/lib/actions/jobs";
 
+import {
+  Code,
+  Palette,
+  Megaphone,
+  Briefcase,
+  Database,
+  PenTool,
+} from "lucide-react";
+
+import { LucideIcon } from "lucide-react";
+import { toast } from "@/components/ui/toast";
+import { useRouter } from "next/navigation";
+
+
 // Collected form shape — easy to map when saving to MongoDB later.
 export type JobFormData = {
   title: string;
@@ -29,6 +43,7 @@ export type JobFormData = {
   category: string;
   jobType: "Full-time" | "Part-time" | "Contract" | "Internship";
   remote: boolean;
+  status: "Active" | "Expired";
   location: string;
   deadline: string;
   minSalary: string;
@@ -36,6 +51,7 @@ export type JobFormData = {
   frequency: string;
   responsibilities: string;
   qualifications: string;
+  applicants: number
 };
 
 const jobTypes: JobFormData["jobType"][] = [
@@ -56,6 +72,8 @@ const jobCategories = [
 
 const frequencies = ["per hour", "per day", "per week", "per month", "per year"];
 
+
+
 const initialJobForm: JobFormData = {
   title: "",
   companyName: "",
@@ -63,12 +81,15 @@ const initialJobForm: JobFormData = {
   jobType: "Full-time",
   remote: true,
   location: "",
+  status: "Active",
   deadline: "",
   minSalary: "",
   maxSalary: "",
   frequency: "per hour",
   responsibilities: "",
   qualifications: "",
+  applicants: 0
+  
 };
 
 function RequiredMark() {
@@ -76,6 +97,7 @@ function RequiredMark() {
 }
 
 export function PostJobForm() {
+  const router = useRouter();
   const [form, setForm] = useState<JobFormData>(initialJobForm);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,8 +117,16 @@ export function PostJobForm() {
     
     const result = await creatJob(jobData);
 
-    // TODO: POST this payload to your jobs API route / Mongo collection later.
-    console.log("New job form data:", result);
+    console.log("create job result", result);
+
+    if(result.insertedId){
+      toast.add({
+        title: "JOb created",
+        description: "The job has been successfully created"
+      })
+      router.push('/dashboard/recruiter/jobs')
+    }
+
   }
 
   return (
