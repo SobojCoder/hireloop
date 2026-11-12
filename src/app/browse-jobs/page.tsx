@@ -1,28 +1,50 @@
-import { getJobs } from '@/lib/api/jobs';
-import React from 'react';
+import { getJobs } from "@/lib/api/jobs";
+import type { JobRow } from "@/types";
 
-const BrowseJobs = async ({searchParams}:{searchParams: Promise<{[key: string]: string | string[] | undefined}>}) => {
-    const search = await searchParams;
+import { FiltersPanel } from "./_components/filters-panel";
+import { JobCard } from "./_components/job-card";
+import { SearchBar } from "./_components/search-bar";
+import { SortSelect } from "./_components/sort-select";
 
-    const urlSearch = new URLSearchParams(search as Record<string, string>);
-    const query = urlSearch.toString();
-    console.log('Search params: ', query);
+export default async function BrowseJobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const search = await searchParams;
 
-    const jobs = await getJobs(query);
+  // Forward every query param verbatim to the jobs API.
+  const query = new URLSearchParams(search as Record<string, string>).toString();
+  const jobs: JobRow[] = await getJobs(query);
 
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 py-8">
+      <SearchBar />
 
-    return (
-        <div>
-            <h1>Browse Jobs</h1>
-            <ul>
-                {jobs.map((job) => (
-                    <li key={job.id}>
-                        <h2>{job.title}</h2>
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-};
+      <div className="mt-6 grid items-start gap-6 lg:grid-cols-[16rem_1fr]">
+        <FiltersPanel jobs={jobs} />
 
-export default BrowseJobs;
+        <section>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h1 className="text-lg font-semibold text-white">
+              Found {jobs.length.toLocaleString("en-US")} Professional Jobs
+            </h1>
+            <SortSelect />
+          </div>
+
+          <div className="mt-4 space-y-4">
+            {jobs.map((job) => (
+              <JobCard key={job._id} job={job} />
+            ))}
+
+            {jobs.length === 0 && (
+              <p className="rounded-xl border border-white/5 bg-[#141417] p-8 text-center text-sm text-zinc-500">
+                No jobs found. Try adjusting your filters.
+              </p>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
