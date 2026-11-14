@@ -5,6 +5,7 @@
 // toggle a bookmark) without touching the URL state.
 
 import { Button } from "@/components/ui/button"
+import { applyToJob } from "@/lib/actions/jobs"
 import { authClient } from "@/lib/auth-client"
 import { JobRow } from "@/types/jobs"
 import { useRouter } from "next/navigation"
@@ -14,11 +15,29 @@ export function JobActions({job}: {job: JobRow}) {
 
     const router = useRouter()
 
-    function handleApply() {
+    async function handleApply() {
         if(!session?.user){
             router.push(`/sign-in?redirectTo=/browse-jobs/${job._id}`)
             return
+    }else if(session?.user.role ==="seeker"){
+        const application = { 
+            jobId: job._id,
+            userId: session.user.id,
+            email: session.user.email,
+            jobTitle: job.title,
+            companyName: job.companyName,
         }
+
+        const result = await applyToJob(application);
+
+        if(result.insertedId){
+               console.log("Application submitted successfully!")
+               router.push('/browse-jobs')
+        }
+    }else{
+        console.log("Only job seekers can apply for jobs.")
+    }
+    
     }
 
     function handleSave() {
