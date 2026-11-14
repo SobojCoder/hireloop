@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { authClient } from "@/lib/auth-client";
+import { useSearchParams } from "next/navigation";
 
 // Collected form shape — reuse this when wiring up Better Auth later.
 export type SignInData = {
@@ -17,15 +18,19 @@ export type SignInData = {
 };
 
 export function SignInForm() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") ?? "/";
+
+  console.log('redirectTo', redirectTo);
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData) as unknown as SignInData;
-
+  
     const { data: signInResponse, error } = await authClient.signIn.email({
     email: data.email, 
     password: data.password, 
-    callbackURL: "/", 
+    callbackURL: redirectTo, 
 });
 console.log('sign in response', signInResponse, error);
     // TODO: integrate authClient.signIn.email(data) here.

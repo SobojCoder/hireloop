@@ -1,50 +1,72 @@
-import { getJobs } from "@/lib/api/jobs";
-import type { JobRow } from "@/types";
+// Browse Jobs — public listing of available jobs.
+//
+// Server component: jobs are fetched server-side, filtered by the URL
+// search params (q, type, category, salary, remote). The filter UI does
+// not touch the URL yet — that wiring is intentionally left for later.
 
-import { FiltersPanel } from "./_components/filters-panel";
-import { JobCard } from "./_components/job-card";
-import { SearchBar } from "./_components/search-bar";
-import { SortSelect } from "./_components/sort-select";
+
+import { getJobs } from "@/lib/api/jobs"
+import { SiteNavbar } from "@/components/site-navbar"
+import type { JobRow } from "@/types/jobs"
+
+import { JobSearchBar } from "./_components/job-search-bar"
+import { JobFiltersPanel } from "./_components/job-filter-panel"
+import { JobSortSelect } from "./_components/job-sort-select"
+import JobCard from "../components/JobCard"
+
+
+const resultsHeadingClass = "text-[22px] font-semibold tracking-[-0.02em] text-[#EDEDEF]"
 
 export default async function BrowseJobsPage({
-  searchParams,
+    searchParams,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const search = await searchParams;
+    const search = await searchParams
+    const urlSearch = new URLSearchParams(search as Record<string, string>)
+    const query = urlSearch.toString()
 
-  // Forward every query param verbatim to the jobs API.
-  const query = new URLSearchParams(search as Record<string, string>).toString();
-  const jobs: JobRow[] = await getJobs(query);
+    console.log("Search params:", query)
+    // TODO: implement the query-param wiring from the filter UI here.
+    const jobs = await getJobs(query)
 
-  return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8">
-      <SearchBar />
+    return (
+        <>
+            <SiteNavbar />
 
-      <div className="mt-6 grid items-start gap-6 lg:grid-cols-[16rem_1fr]">
-        <FiltersPanel jobs={jobs} />
+            <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+                {/* Search & primary action */}
+                <JobSearchBar />
 
-        <section>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-lg font-semibold text-white">
-              Found {jobs.length.toLocaleString("en-US")} Professional Jobs
-            </h1>
-            <SortSelect />
-          </div>
+                {/* Sidebar filters + job list */}
+                <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[296px_minmax(0,1fr)] lg:gap-8">
+                    <aside>
+                        <JobFiltersPanel jobs={jobs} />
+                    </aside>
 
-          <div className="mt-4 space-y-4">
-            {jobs.map((job) => (
-              <JobCard key={job._id} job={job} />
-            ))}
+                    <section>
+                        {/* Results heading + sort (Figma: "Found 1,248 Professional Jobs" / "Sort by:") */}
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <h2 className={resultsHeadingClass}>
+                                Found {jobs.length.toLocaleString("en-US")} Professional Jobs
+                            </h2>
+                            <JobSortSelect />
+                        </div>
 
-            {jobs.length === 0 && (
-              <p className="rounded-xl border border-white/5 bg-[#141417] p-8 text-center text-sm text-zinc-500">
-                No jobs found. Try adjusting your filters.
-              </p>
-            )}
-          </div>
-        </section>
-      </div>
-    </div>
-  );
+                        {/* Job list (replaced by the Figma job card when wired) */}
+                        <ul className="mt-4 flex list-none flex-col gap-3">
+                            {jobs.map((job: JobRow) => <JobCard key={job._id} job={job} />)}
+                            {jobs.length === 0 ? (
+                                <li className="surface-card p-10 text-center text-sm text-[#6E6E78]">
+                                    No jobs match your current search.
+                                </li>
+                            ) : null}
+                        </ul>
+                    </section>
+                </div>
+            </main>
+        </>
+    )
 }
+
+// https://www.linkedin.com/jobs/search-results/?currentJobId=4472942002&keywords=nextjs&origin=JOB_SEARCH_PAGE_JOB_FILTER&referralSearchId=j6ngejDhx5wA2DZwixWr0Q%3D%3D&f_SAL=f_SA_id_227001%3A277001%24f_SA_id_226001%3A273001
