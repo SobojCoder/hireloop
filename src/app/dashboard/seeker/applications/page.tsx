@@ -11,6 +11,9 @@ import {
 
 import { PageHeader } from "@/components/shared/page-header";
 import type { ApplicationRow, ApplicationStatus } from "@/types";
+import { getApplications } from "@/lib/api/applications";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 // ─── Dummy data ───
 // TEMP: swap for `await getApplications(`userId=${session.user.id}`)` from
@@ -134,13 +137,20 @@ const statusStyles: Record<ApplicationStatus, { pill: string; dot: string }> = {
   },
 };
 
-function StatusPill({ status }: { status: ApplicationStatus }) {
-  const styles = statusStyles[status];
+function StatusPill({ status }: { status: string }) {
+  const styles = statusStyles[status as keyof typeof statusStyles] ?? {
+    pill: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+    dot: "bg-gray-500",
+  };
+
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${styles.pill}`}
     >
-      <span aria-hidden="true" className={`size-1.5 rounded-full ${styles.dot}`} />
+      <span
+        aria-hidden="true"
+        className={`size-1.5 rounded-full ${styles.dot}`}
+      />
       {status}
     </span>
   );
@@ -194,8 +204,15 @@ const tableHeaders = [
   "Actions",
 ];
 
-export default function ApplicationsPage() {
-  const applications = DUMMY_APPLICATIONS;
+export default async function ApplicationsPage() {
+
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+  const applications = await getApplications(`userId=${session?.user?.id}`);
+
+
 
   const pending = applications.filter(
     (a) => a.status === "Pending" || a.status === "Reviewed",

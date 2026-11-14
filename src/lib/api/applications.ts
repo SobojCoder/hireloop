@@ -9,3 +9,7 @@ export const getApplications = async (query = "") => {
   const res = await fetch(`${BASE_URL}/applications?${query}`);
   return res.json() as Promise<ApplicationRow[]>;
 };
+export const getApplicationsCount = async (query = "") => {
+  const res = await fetch(`${BASE_URL}/applications/count?${query}`);
+  return res.json() as Promise<{count: number}>;
+};

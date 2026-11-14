@@ -6,6 +6,7 @@
 
 import { Button } from "@/components/ui/button"
 import { applyToJob } from "@/lib/actions/jobs"
+import { getApplicationsCount } from "@/lib/api/applications"
 import { authClient } from "@/lib/auth-client"
 import type { ApplicationPayload } from "@/types"
 import { JobRow } from "@/types/jobs"
@@ -21,6 +22,13 @@ export function JobActions({job}: {job: JobRow}) {
             router.push(`/sign-in?redirectTo=/browse-jobs/${job._id}`)
             return
     }else if(session?.user.role ==="seeker"){
+
+        const countResult = await getApplicationsCount(`userId=${session?.user.id}`)
+        if(countResult.count >= 10){
+            console.log("You have reached the maximum number of applications allowed.")
+            router.push('/payment')
+            return
+        }else{
         const application: ApplicationPayload = {
             // Who is applying (from the auth session).
             userId: session.user.id,
@@ -51,6 +59,7 @@ export function JobActions({job}: {job: JobRow}) {
                console.log("Application submitted successfully!")
                router.push('/browse-jobs')
         }
+         }
     }else{
         console.log("Only job seekers can apply for jobs.")
     }
