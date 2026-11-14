@@ -7,6 +7,7 @@
 import { Button } from "@/components/ui/button"
 import { applyToJob } from "@/lib/actions/jobs"
 import { authClient } from "@/lib/auth-client"
+import type { ApplicationPayload } from "@/types"
 import { JobRow } from "@/types/jobs"
 import { useRouter } from "next/navigation"
 
@@ -20,12 +21,28 @@ export function JobActions({job}: {job: JobRow}) {
             router.push(`/sign-in?redirectTo=/browse-jobs/${job._id}`)
             return
     }else if(session?.user.role ==="seeker"){
-        const application = { 
-            jobId: job._id,
+        const application: ApplicationPayload = {
+            // Who is applying (from the auth session).
             userId: session.user.id,
+            applicantName: session.user.name,
             email: session.user.email,
+
+            // Which job — snapshot of its display fields for the
+            // "My Applications" dashboard page.
+            jobId: job._id,
             jobTitle: job.title,
             companyName: job.companyName,
+            location: job.location,
+            jobType: job.jobType,
+
+            // What the seeker submitted.
+            // TODO: collect these from an application form / resume upload.
+            resumeUrl: "",
+            coverLetter: "",
+
+            // New applications always start here.
+            status: "Pending",
+            appliedAt: new Date().toISOString(),
         }
 
         const result = await applyToJob(application);

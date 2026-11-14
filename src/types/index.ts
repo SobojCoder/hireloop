@@ -5,4 +5,5 @@
 //   import type { JobFormData, JobRow } from "@/types";
 
 export type * from "./job";
+export type * from "./application";
 export type * from "./dashboard";
