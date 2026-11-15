@@ -19,98 +19,7 @@ import { headers } from "next/headers";
 // TEMP: swap for `await getApplications(`userId=${session.user.id}`)` from
 // "@/lib/api/applications" once the data is loaded. The fields mirror the
 // ApplicationRow type ("@/types") — exactly what applyToJob saves to the DB.
-const DUMMY_APPLICATIONS: ApplicationRow[] = [
-  {
-    _id: "app_001",
-    userId: "user_seeker_1",
-    applicantName: "Amina Yusuf",
-    email: "amina@example.com",
-    jobId: "job_101",
-    jobTitle: "Senior Frontend Engineer",
-    companyName: "TechNova",
-    location: "Remote",
-    jobType: "Full-time",
-    resumeUrl: "/resumes/amina-yusuf.pdf",
-    coverLetter: "",
-    status: "Pending",
-    appliedAt: "2026-11-12T09:30:00.000Z",
-  },
-  {
-    _id: "app_002",
-    userId: "user_seeker_1",
-    applicantName: "Amina Yusuf",
-    email: "amina@example.com",
-    jobId: "job_102",
-    jobTitle: "Product Designer",
-    companyName: "PixelWorks",
-    location: "Lagos, Nigeria",
-    jobType: "Contract",
-    resumeUrl: "/resumes/amina-yusuf.pdf",
-    coverLetter: "I have shipped design systems for three fintechs…",
-    status: "Shortlisted",
-    appliedAt: "2026-11-09T14:05:00.000Z",
-  },
-  {
-    _id: "app_003",
-    userId: "user_seeker_1",
-    applicantName: "Amina Yusuf",
-    email: "amina@example.com",
-    jobId: "job_103",
-    jobTitle: "Backend Developer (Node.js)",
-    companyName: "CloudHarbor",
-    location: "Berlin, Germany",
-    jobType: "Full-time",
-    resumeUrl: "",
-    coverLetter: "",
-    status: "Reviewed",
-    appliedAt: "2026-11-05T08:12:00.000Z",
-  },
-  {
-    _id: "app_004",
-    userId: "user_seeker_1",
-    applicantName: "Amina Yusuf",
-    email: "amina@example.com",
-    jobId: "job_104",
-    jobTitle: "Marketing Intern",
-    companyName: "BrightPath Media",
-    location: "Remote",
-    jobType: "Internship",
-    resumeUrl: "/resumes/amina-yusuf.pdf",
-    coverLetter: "",
-    status: "Accepted",
-    appliedAt: "2026-10-28T16:45:00.000Z",
-  },
-  {
-    _id: "app_005",
-    userId: "user_seeker_1",
-    applicantName: "Amina Yusuf",
-    email: "amina@example.com",
-    jobId: "job_105",
-    jobTitle: "Data Analyst",
-    companyName: "InsightGrid",
-    location: "London, UK",
-    jobType: "Part-time",
-    resumeUrl: "/resumes/amina-yusuf.pdf",
-    coverLetter: "",
-    status: "Rejected",
-    appliedAt: "2026-10-20T11:20:00.000Z",
-  },
-  {
-    _id: "app_006",
-    userId: "user_seeker_1",
-    applicantName: "Amina Yusuf",
-    email: "amina@example.com",
-    jobId: "job_106",
-    jobTitle: "QA Engineer",
-    companyName: "TechNova",
-    location: "Remote",
-    jobType: "Full-time",
-    resumeUrl: "/resumes/amina-yusuf.pdf",
-    coverLetter: "",
-    status: "Pending",
-    appliedAt: "2026-11-13T10:00:00.000Z",
-  },
-];
+
 
 // Status → pill styling (border / background / text + dot color), matching
 // the StatusPill pattern on the recruiter jobs page.
@@ -209,6 +118,7 @@ export default async function ApplicationsPage() {
     const session = await auth.api.getSession({
         headers: await headers(),
     });
+    console.log("session", session?.user?.id)
 
   const applications = await getApplications(`userId=${session?.user?.id}`);
 

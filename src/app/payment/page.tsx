@@ -1,50 +1,23 @@
 
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 import {
   ArrowLeft,
-  ArrowRight,
-  Check,
   CreditCard,
+  Check,
   Lock,
   ShieldCheck,
   Sparkles,
   Zap,
   BadgeCheck,
+  ArrowRight,
 } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import CheckoutForm from "../components/checkout-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { getSession } from "@/lib/core/server";
 
-type Currency = "BDT" | "USD";
-
-const PLAN = {
-  name: "Hireloop Pro",
-  tagline: "Everything you need to get hired faster.",
-  usdPrice: 20,
-  exchangeRate: 127.5665,
-};
-
-const CURRENCY_BOXES: {
-  code: Currency;
-  flag: string;
-  label: string;
-}[] = [
-  { code: "BDT", flag: "🇧🇩", label: "Bangladeshi Taka" },
-  { code: "USD", flag: "🇺🇸", label: "US Dollar" },
-];
-
-function formatAmount(currency: Currency) {
-  if (currency === "USD") return `$${PLAN.usdPrice.toFixed(2)}`;
-
-  return `৳${Math.round(
-    PLAN.usdPrice * PLAN.exchangeRate
-  ).toLocaleString("en-US")}`;
-}
 
 const FEATURES = [
   "Unlimited job applications",
@@ -54,27 +27,28 @@ const FEATURES = [
   "Premium career insights",
 ];
 
-export default function PaymentPage() {
-  const { data: session } = authClient.useSession();
+const PLAN = {
+  name: "Hireloop Pro",
+  usdPrice: 20.00,
+  tagline: "Everything you need to get hired faster.",
+};
 
-  const [currency, setCurrency] = useState<Currency>("BDT");
-  const [email, setEmail] = useState(session?.user.email ?? "");
-  const [paying, setPaying] = useState(false);
 
-  async function handlePay() {
-    if (!email) return;
 
-    setPaying(true);
 
-    // TODO: Create Stripe Checkout session and redirect.
-    console.log("Redirecting to Stripe checkout…", {
-      currency,
-      email,
-    });
+export default async function PaymentPage({searchParams}: {searchParams: {canceled?: string}}) {
+     const { canceled } = await searchParams
 
-    setPaying(false);
+  if (canceled) {
+    console.log(
+      'Order canceled -- continue to shop around and check out when you\'re ready.'
+    )
   }
-
+  const session = await getSession();
+  
+    const email = session?.user?.email ?? "";
+  
+    
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#09090f] px-4 py-8 text-white sm:py-12">
 
@@ -118,7 +92,7 @@ export default function PaymentPage() {
         {/* Checkout layout */}
         <div className="grid overflow-hidden rounded-3xl border border-white/10 bg-[#111119] shadow-2xl shadow-black/40 lg:grid-cols-[1.05fr_0.95fr]">
 
-          {/* Left: Plan details */}
+          {/* Plan details - Server Component */}
           <section className="relative overflow-hidden border-b border-white/10 p-7 sm:p-10 lg:border-b-0 lg:border-r">
 
             <div className="pointer-events-none absolute -right-20 -top-20 size-64 rounded-full bg-indigo-500/10 blur-[90px]" />
@@ -153,8 +127,9 @@ export default function PaymentPage() {
 
                 <div className="mt-7 flex items-end gap-2">
                   <span className="text-4xl font-bold tracking-tight">
-                    {formatAmount(currency)}
+                    $20.00
                   </span>
+
                   <span className="mb-1 text-sm text-zinc-500">
                     / one-time
                   </span>
@@ -169,7 +144,7 @@ export default function PaymentPage() {
               {/* Features */}
               <div className="mt-9">
                 <h3 className="mb-5 text-sm font-semibold text-white">
-                  What's included
+                  What&apos;s included
                 </h3>
 
                 <ul className="space-y-4">
@@ -195,153 +170,140 @@ export default function PaymentPage() {
                   <p className="text-xs font-semibold text-zinc-200">
                     Your payment is protected
                   </p>
+
                   <p className="mt-1 text-[11px] text-zinc-500">
                     Secure payment processing powered by Stripe.
                   </p>
                 </div>
               </div>
+
             </div>
           </section>
 
-          {/* Right: Payment details */}
+          {/* Payment form - Client Component */}
           <section className="flex flex-col p-7 sm:p-10">
+      {/* Header */}
+      <div>
+        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+          Checkout details
+        </span>
 
+        <h2 className="mt-3 text-2xl font-bold">
+          Complete your purchase
+        </h2>
+
+        <p className="mt-2 text-sm text-zinc-500">
+          Just a few details to get you started.
+        </p>
+      </div>
+
+      {/* Currency */}
+      <div className="mt-9">
+        <Label className="text-sm font-semibold text-zinc-300">
+          Selected currency
+        </Label>
+
+        <div className="mt-3 rounded-xl border border-indigo-500/70 bg-indigo-500/10 p-4 ring-1 ring-indigo-500/30">
+          <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                Checkout details
-              </span>
+             
 
-              <h2 className="mt-3 text-2xl font-bold">
-                Complete your purchase
-              </h2>
+              <p className="mt-3 text-sm font-semibold text-white">
+                USD
+              </p>
 
-              <p className="mt-2 text-sm text-zinc-500">
-                Just a few details to get you started.
+              <p className="mt-1 text-[11px] text-zinc-500">
+                US Dollar (USD)
               </p>
             </div>
 
-            {/* Currency */}
-            <div className="mt-9">
-              <Label className="text-sm font-semibold text-zinc-300">
-                Select currency
-              </Label>
+            <Check className="size-5 text-indigo-400" />
+          </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                {CURRENCY_BOXES.map((option) => {
-                  const selected = currency === option.code;
+          <p className="mt-3 text-sm font-bold text-indigo-300">
+            ${PLAN.usdPrice}
+          </p>
+        </div>
 
-                  return (
-                    <button
-                      key={option.code}
-                      type="button"
-                      onClick={() => setCurrency(option.code)}
-                      aria-pressed={selected}
-                      className={`relative rounded-xl border p-4 text-left transition-all ${
-                        selected
-                          ? "border-indigo-500/70 bg-indigo-500/10 ring-1 ring-indigo-500/30"
-                          : "border-white/10 bg-white/[0.02] hover:border-white/20"
-                      }`}
-                    >
-                      {selected && (
-                        <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-indigo-500 text-white">
-                          <Check className="size-3" />
-                        </span>
-                      )}
+        
+      </div>
 
-                      <span className="text-xl">{option.flag}</span>
+      {/* Email */}
+      <div className="mt-9">
+        <Label
+          htmlFor="email"
+          className="text-sm font-semibold text-zinc-300"
+        >
+          Billing email address
+        </Label>
 
-                      <p className="mt-3 text-sm font-semibold text-white">
-                        {option.code}
-                      </p>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          readOnly
+          placeholder="No email found"
+          className="mt-2"
+        />
 
-                      <p className="mt-1 text-[11px] text-zinc-500">
-                        {option.label}
-                      </p>
+        <p className="mt-2 text-xs text-zinc-600">
+          Your payment confirmation will be sent to this address.
+        </p>
+      </div>
 
-                      <p className="mt-3 text-sm font-bold text-indigo-300">
-                        {formatAmount(option.code)}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
+      {/* Order total */}
+      <div className="mt-9 space-y-3 border-t border-white/10 pt-6">
+        <div className="flex justify-between text-sm">
+          <span className="text-zinc-500">
+            ${PLAN.name}
+          </span>
 
-              <p className="mt-3 text-xs text-zinc-600">
-                Exchange rate: 1 USD = {PLAN.exchangeRate} BDT
-              </p>
-            </div>
+          <span className="font-medium text-zinc-300">
+            ${PLAN.usdPrice}
+          </span>
+        </div>
 
-            {/* Email */}
-            <div className="mt-9">
-              <Label
-                htmlFor="email"
-                className="text-sm font-semibold text-zinc-300"
-              >
-                Billing email address
-              </Label>
+        <div className="flex justify-between text-sm">
+          <span className="text-zinc-500">Discount</span>
+          <span className="text-emerald-400">Included</span>
+        </div>
 
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                className="mt-3 h-12 border-white/10 bg-white/[0.03] text-white placeholder:text-zinc-600 focus-visible:ring-indigo-500"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
+        <div className="flex items-center justify-between border-t border-white/10 pt-4">
+          <span className="font-semibold text-white">
+            Total due today
+          </span>
 
-              <p className="mt-2 text-xs text-zinc-600">
-                Your payment confirmation will be sent to this address.
-              </p>
-            </div>
+          <span className="text-2xl font-bold text-white">
+            ${PLAN.usdPrice}
+          </span>
+        </div>
+      </div>
 
-            {/* Order total */}
-            <div className="mt-9 space-y-3 border-t border-white/10 pt-6">
-              <div className="flex justify-between text-sm">
-                <span className="text-zinc-500">
-                  {PLAN.name}
-                </span>
-                <span className="font-medium text-zinc-300">
-                  {formatAmount(currency)}
-                </span>
-              </div>
+      {/* Payment information */}
+      <form action="/api/checkout_sessions" method="POST">
+      <section>
+        <button
+  type="submit"
+  role="link"
+  className="group mt-7 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-600 to-purple-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:from-indigo-400 hover:via-violet-500 hover:to-purple-500 hover:shadow-xl hover:shadow-indigo-500/30 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0D10]"
+>
+  Checkout ${PLAN.usdPrice}
+  <ArrowRight className="size-5 transition-transform duration-300 group-hover:translate-x-1" />
+</button>
+      </section>
+    </form>
 
-              <div className="flex justify-between text-sm">
-                <span className="text-zinc-500">Discount</span>
-                <span className="text-emerald-400">Included</span>
-              </div>
+      <div className="mt-5 flex items-center justify-center gap-2 text-xs text-zinc-500">
+        <Lock className="size-3.5 text-emerald-400" />
+        Encrypted and secure checkout
+      </div>
 
-              <div className="flex items-center justify-between border-t border-white/10 pt-4">
-                <span className="font-semibold text-white">
-                  Total due today
-                </span>
-                <span className="text-2xl font-bold text-white">
-                  {formatAmount(currency)}
-                </span>
-              </div>
-            </div>
+      <div className="mt-auto flex items-center justify-center gap-2 pt-10 text-xs text-zinc-600">
+        <BadgeCheck className="size-4" />
+        Powered by Stripe
+      </div>
+    </section>
 
-            {/* Pay button */}
-            <Button
-              variant="brand"
-              className="mt-7 h-13 w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-base font-semibold text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.01] hover:from-indigo-400 hover:to-violet-500"
-              disabled={!email || paying}
-              onClick={handlePay}
-            >
-              <CreditCard className="mr-2 size-5" />
-              {paying ? "Processing..." : `Pay ${formatAmount(currency)}`}
-              <ArrowRight className="ml-2 size-4" />
-            </Button>
-
-            <div className="mt-5 flex items-center justify-center gap-2 text-xs text-zinc-500">
-              <Lock className="size-3.5 text-emerald-400" />
-              Encrypted and secure checkout
-            </div>
-
-            <div className="mt-auto flex items-center justify-center gap-2 pt-10 text-xs text-zinc-600">
-              <BadgeCheck className="size-4" />
-              Powered by Stripe
-            </div>
-          </section>
         </div>
 
         {/* Footer */}
@@ -349,11 +311,15 @@ export default function PaymentPage() {
           <Link href="/terms" className="transition hover:text-zinc-300">
             Terms of Service
           </Link>
+
           <span>•</span>
+
           <Link href="/privacy" className="transition hover:text-zinc-300">
             Privacy Policy
           </Link>
+
           <span>•</span>
+
           <span>© 2026 HireLoop</span>
         </footer>
 

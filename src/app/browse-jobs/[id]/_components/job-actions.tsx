@@ -7,6 +7,7 @@
 import { Button } from "@/components/ui/button"
 import { applyToJob } from "@/lib/actions/jobs"
 import { getApplicationsCount } from "@/lib/api/applications"
+import { getUserPremiumById } from "@/lib/api/user"
 import { authClient } from "@/lib/auth-client"
 import type { ApplicationPayload } from "@/types"
 import { JobRow } from "@/types/jobs"
@@ -23,8 +24,13 @@ export function JobActions({job}: {job: JobRow}) {
             return
     }else if(session?.user.role ==="seeker"){
 
+        //ispremium user or not
+        const userPremiumResult= await getUserPremiumById(session?.user.id)
+
+        console.log("userPremiumResult", userPremiumResult)
+
         const countResult = await getApplicationsCount(`userId=${session?.user.id}`)
-        if(countResult.count >= 10){
+        if(!userPremiumResult.premium && countResult.count >= 2){
             console.log("You have reached the maximum number of applications allowed.")
             router.push('/payment')
             return
